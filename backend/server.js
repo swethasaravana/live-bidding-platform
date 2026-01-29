@@ -13,43 +13,58 @@ const io = new Server(server, {
 });
 
 const INITIAL_DURATION = 2 * 60 * 1000; // 2 minutes
-const RESET_DURATION = 30 * 1000; // 30 seconds after each bid
+const RESET_DURATION = 1 * 60 * 1000; // 1 minute after each bid
 
-let items = [
-  {
-    id: 1,
-    title: "iPhone 15",
-    startingPrice: 500,
-    currentBid: 500,
-    endTime: Date.now() + INITIAL_DURATION,
-    highestBidder: null,
-    ended: false,
-  },
-  {
-    id: 2,
-    title: "MacBook Air",
-    startingPrice: 800,
-    currentBid: 800,
-    endTime: Date.now() + INITIAL_DURATION,
-    highestBidder: null,
-    ended: false,
-  },
-  {
-    id: 3,
-    title: "Samsung S24",
-    startingPrice: 400,
-    currentBid: 400,
-    endTime: Date.now() + INITIAL_DURATION,
-    highestBidder: null,
-    ended: false,
-  },
-];
+function createItems() {
+  return [
+    {
+      id: 1,
+      title: "iPhone 15",
+      startingPrice: 500,
+      currentBid: 500,
+      endTime: Date.now() + INITIAL_DURATION,
+      highestBidder: null,
+      ended: false,
+    },
+    {
+      id: 2,
+      title: "MacBook Air",
+      startingPrice: 800,
+      currentBid: 800,
+      endTime: Date.now() + INITIAL_DURATION,
+      highestBidder: null,
+      ended: false,
+    },
+    {
+      id: 3,
+      title: "Samsung S24",
+      startingPrice: 400,
+      currentBid: 400,
+      endTime: Date.now() + INITIAL_DURATION,
+      highestBidder: null,
+      ended: false,
+    },
+  ];
+}
 
+let items = createItems();
 let bidLocks = {};
 
-app.get("/items", (req, res) => res.json(items));
+// When client asks items, restart auctions if all ended
+app.get("/items", (req, res) => {
+  const allEnded = items.every((item) => item.ended === true);
+
+  if (allEnded) {
+    items = createItems(); // restart auction fresh
+    console.log("All auctions restarted");
+  }
+
+  res.json(items);
+});
+
 app.get("/time", (req, res) => res.json({ serverTime: Date.now() }));
 
+// check auction end
 setInterval(() => {
   const now = Date.now();
   items.forEach((item) => {
@@ -64,6 +79,7 @@ setInterval(() => {
   });
 }, 1000);
 
+// socket
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
@@ -88,8 +104,11 @@ io.on("connection", (socket) => {
       return;
     }
 
+    // accept bid
     item.currentBid = bidAmount;
     item.highestBidder = userId;
+
+    // reset timer on bid
     item.endTime = Date.now() + RESET_DURATION;
 
     io.emit("UPDATE_BID", item);
