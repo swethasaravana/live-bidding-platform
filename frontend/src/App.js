@@ -4,7 +4,7 @@ import "./App.css";
 
 const userId = Math.random().toString(36).substring(7);
 
-//Render backend URL
+// Render backend URL
 const BACKEND_URL = "https://live-bidding-platform-qz87.onrender.com";
 
 function App() {
@@ -12,12 +12,11 @@ function App() {
   const [status, setStatus] = useState({});
   const [socket, setSocket] = useState(null);
   const [serverOffset, setServerOffset] = useState(0);
-  const [tick, setTick] = useState(0);
   const [winners, setWinners] = useState({});
   const [flashItem, setFlashItem] = useState(null);
 
   useEffect(() => {
-    // ⏱️ get server time
+    //get server time
     fetch(`${BACKEND_URL}/time`)
       .then((res) => res.json())
       .then((data) => {
@@ -25,7 +24,7 @@ function App() {
         setServerOffset(offset);
       });
 
-    // 📦 get items
+    //get items
     fetch(`${BACKEND_URL}/items`)
       .then((res) => res.json())
       .then((data) => setItems(data));
@@ -63,9 +62,9 @@ function App() {
 
     newSocket.on("BID_ERROR", (msg) => alert(msg));
 
-    // ⏱️ re-render every second for timer
+    // ⏱️ force re-render every second for timer
     const interval = setInterval(() => {
-      setTick((t) => t + 1);
+      setItems((prev) => [...prev]);
     }, 1000);
 
     return () => {
@@ -134,6 +133,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
