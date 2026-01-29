@@ -50,7 +50,6 @@ function createItems() {
 let items = createItems();
 let bidLocks = {};
 
-// When client asks items, restart auctions if all ended
 app.get("/items", (req, res) => {
   const allEnded = items.every((item) => item.ended === true);
 
